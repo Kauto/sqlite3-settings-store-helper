@@ -1,9 +1,3 @@
-let DB = null
-try {
-  DB = require('sqlite3-helper/no-generators')
-} catch (e) {
-  DB = require('better-sqlite3-helper')
-}
 const AwaitLock = require('await-lock')
 const objectPathGet = require('object-path-get')
 const objectPathSet = require('object-path-set')
@@ -37,6 +31,14 @@ function Setting (options) {
   }, options)
   this.awaitLock = new AwaitLock()
   this.checkedForTable = false
+  this.db = options.db
+  if (!this.db) {
+    try {
+      this.db = require('sqlite3-helper/no-generators')
+    } catch (e) {
+      this.db = require('better-sqlite3-helper')
+    }
+  }
 }
 
 Setting.prototype.initTable = async function () {
@@ -46,7 +48,7 @@ Setting.prototype.initTable = async function () {
     return true
   }
   try {
-    await DB().run(
+    await this.db.run(
       `CREATE TABLE IF NOT EXISTS \`${this.options.tableName}\` (
         \`key\` TEXT NOT NULL UNIQUE,
         \`value\` BLOB NOT NULL,
@@ -71,7 +73,7 @@ Setting.prototype.getSettings = async function (force = false) {
   }
 
   try {
-    this.settings = (await DB().query(`SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\``)).reduce((loadedObject, v) => {
+    this.settings = (await this.db.query(`SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\``)).reduce((loadedObject, v) => {
       objectPathSet(loadedObject, v.key, this.options.unserialize(v.value), this.options.seperator)
       return loadedObject
     }, this.options.defaults)
@@ -89,12 +91,14 @@ Setting.prototype.get = async function (key, defaultValue = undefined) {
     return objectPathGet((await this.getSettings()), key, defaultValue, this.options.seperator)
   }
   await this.initTable()
-  const value = await DB().queryFirstCell(`SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\`=?`, key)
-  return this.options.unserialize(
-    value === undefined
-      ? await DB().queryColumn('value', `SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\` like ?`, generateLikeTermForObjectSearch(key, this.options.seperator))
-      : value
-  )
+  let value = await this.db.queryFirstCell(`SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\`=?`, key)
+  if (value === undefined) {
+    value = await this.db.queryKeyAndColumn('key', 'value', `SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\` WHERE \`key\` like ?`, generateLikeTermForObjectSearch(key, this.options.seperator))
+    if (!Object.keys(value).length) {
+      return defaultValue
+    }
+  }
+  return this.options.unserialize(value)
 }
 
 Setting.prototype.set = async function (key, value) {
@@ -107,9 +111,9 @@ Setting.prototype.set = async function (key, value) {
   }
   try {
     if (value === undefined) {
-      await DB().query(`DELETE FROM \`${this.options.tableName}\` WHERE \`key\` = ?`, key)
+      await this.db.run(`DELETE FROM \`${this.options.tableName}\` WHERE \`key\` = ?`, key)
     } else {
-      await DB().query(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, key, this.options.serialize(value))
+      await this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, key, this.options.serialize(value))
     }
   } catch (e) {
     console.error(e)
