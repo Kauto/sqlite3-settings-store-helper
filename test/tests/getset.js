@@ -29,14 +29,38 @@ module.exports = function (options, DB, DBOptions) {
       expect(await settings.get('testvalue')).to.have.string('test447')
     })
 
+    it('should set a string and get a string later from database', async function () {
+      await settings.set('testvalue', 'test447')
+
+      settings = new Settings(Object.assign({}, options, { db }))
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue')).to.have.string('test447')
+    })
+
     it('should set a number and get a number', async function () {
       await settings.set('testvalue', 31)
       // eslint-disable-next-line no-unused-expressions
       expect(await settings.get('testvalue')).to.equal(31)
     })
 
+    it('should set a number and get a number later from database', async function () {
+      await settings.set('testvalue', 31)
+
+      settings = new Settings(Object.assign({}, options, { db }))
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue')).to.equal(31)
+    })
+
     it('should set a bool and get a bool', async function () {
       await settings.set('testvalue', true)
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue')).to.equal(true)
+    })
+
+    it('should set a bool and get a bool later from database', async function () {
+      await settings.set('testvalue', true)
+
+      settings = new Settings(Object.assign({}, options, { db }))
       // eslint-disable-next-line no-unused-expressions
       expect(await settings.get('testvalue')).to.equal(true)
     })

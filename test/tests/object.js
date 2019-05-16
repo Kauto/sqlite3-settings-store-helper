@@ -29,6 +29,28 @@ module.exports = function (options, DB, DBOptions) {
       expect(await settings.get('testvalue')).to.deep.equal({ r: 'fe' })
     })
 
+    it('should set a object and get a object from database', async function () {
+      await settings.set('testvalue', { r: 'fe' })
+
+      settings = new Settings(Object.assign({}, options, { db }))
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue')).to.deep.equal({ r: 'fe' })
+    })
+
+    it('should set a object and get a object-part', async function () {
+      await settings.set('testvalue', { a: { r: 'fe' } })
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue.a')).to.deep.equal({ r: 'fe' })
+    })
+
+    it('should set a object and get a object-part from database', async function () {
+      await settings.set('testvalue', { a: { r: 'fe' } })
+
+      settings = new Settings(Object.assign({}, options, { db }))
+      // eslint-disable-next-line no-unused-expressions
+      expect(await settings.get('testvalue.a')).to.deep.equal({ r: 'fe' })
+    })
+
     it('should deep load a value from default object', async function () {
       // eslint-disable-next-line no-unused-expressions
       expect(await settings.get('a.b')).to.deep.equal('c')

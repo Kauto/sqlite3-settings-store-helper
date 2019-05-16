@@ -68,10 +68,30 @@ Setting.prototype.initTable = async function () {
   return true
 }
 
+Setting.prototype.getObjectPathListHelper = function (obj, keyPrefix = '') {
+  const keys = Object.keys(obj)
+  const length = keys.length
+  let list = []
+  for (let i = 0; i < length; i++) {
+    let value = obj[keys[i]]
+    let key = keyPrefix ? `${keyPrefix}${this.options.seperator}${keys[i]}` : keys[i]
+    if (typeof value === 'object') {
+      list.concat(this.getObjectPathListHelper(value, key))
+    } else {
+      list.push([key, value])
+    }
+  }
+  return list
+}
+
+Setting.prototype.getObjectPathList = async function () {
+  return this.getObjectPathListHelper(await this.getSettings())
+}
+
 Setting.prototype.getSettings = async function (force = false) {
   await this.initTable()
   await this.awaitLock.acquireAsync()
-  if (this.options.cache && this.settings) {
+  if (!force && this.options.cache && this.settings) {
     this.awaitLock.release()
     return this.settings
   }
@@ -108,9 +128,13 @@ Setting.prototype.get = async function (key, defaultValue = undefined) {
 
 Setting.prototype.set = async function (key, value) {
   await this.initTable()
+  let deleteOldObject = true
   if (this.options.cache) {
     await this.awaitLock.acquireAsync()
     if (this.settings) {
+      if (typeof objectPathGet(this.settings, key, undefined, this.options.seperator) !== 'object') {
+        deleteOldObject = false
+      }
       objectPathSet(this.settings, key, value, this.options.seperator)
     }
   }
@@ -118,7 +142,16 @@ Setting.prototype.set = async function (key, value) {
     if (value === undefined) {
       await this.db.run(`DELETE FROM \`${this.options.tableName}\` WHERE \`key\` = ?`, key)
     } else {
-      await this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, key, this.options.serialize(value))
+      if (deleteOldObject) {
+        await this.db.run(`DELETE FROM \`${this.options.tableName}\` WHERE \`key\` like ?`, generateLikeTermForObjectSearch(key, this.options.seperator))
+      }
+      if (typeof value === 'object') {
+        const objectPathList = this.getObjectPathListHelper(value, key)
+        console.log(objectPathList, value)
+        await Promise.all(objectPathList.map(([keyElement, valueElement]) => this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, keyElement, this.options.serialize(valueElement))))
+      } else {
+        await this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, key, this.options.serialize(value))
+      }
     }
   } catch (e) {
     console.error(e)
