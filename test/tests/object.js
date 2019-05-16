@@ -53,7 +53,7 @@ module.exports = function (options, DB, DBOptions) {
 
     it('should deep load a value from default object', async function () {
       // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('a.b')).to.deep.equal('c')
+      expect(await settings.get('a.b')).to.equal('c')
     })
 
     it('should load object from default value', async function () {

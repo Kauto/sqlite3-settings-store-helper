@@ -1,4 +1,5 @@
 const { describe } = require('mocha')
+const config = require('./tests/config')
 const DB = require('better-sqlite3-helper')
 const DBoptions = {
   path: ':memory:',
@@ -6,9 +7,9 @@ const DBoptions = {
 }
 const settingsOptions = {
   cache: false,
-  default: require('./tests/default')
-
+  default: config.default
 }
 
-describe('better-sqlite3-helper - no cache - getset', require('./tests/getset')(settingsOptions, DB, DBoptions))
-describe('better-sqlite3-helper - no cache - object', require('./tests/object')(settingsOptions, DB, DBoptions))
+for (const test of config.tests) {
+  describe(`better-sqlite3-helper - no cache - ${test}`, require(`./tests/${test}`)(settingsOptions, DB, DBoptions))
+}

@@ -59,9 +59,6 @@ Setting.prototype.initTable = async function () {
         PRIMARY KEY(\`key\`)
       );`)
     this.checkedForTable = true
-  } catch (e) {
-    console.error(e)
-    throw e
   } finally {
     this.awaitLock.release()
   }
@@ -76,7 +73,7 @@ Setting.prototype.getObjectPathListHelper = function (obj, keyPrefix = '') {
     let value = obj[keys[i]]
     let key = keyPrefix ? `${keyPrefix}${this.options.seperator}${keys[i]}` : keys[i]
     if (typeof value === 'object') {
-      list.concat(this.getObjectPathListHelper(value, key))
+      list = list.concat(this.getObjectPathListHelper(value, key))
     } else {
       list.push([key, value])
     }
@@ -101,9 +98,6 @@ Setting.prototype.getSettings = async function (force = false) {
       objectPathSet(loadedObject, v.key, this.options.unserialize(v.value), this.options.seperator)
       return loadedObject
     }, this.options.default)
-  } catch (e) {
-    console.error(e)
-    throw e
   } finally {
     this.awaitLock.release()
   }
@@ -147,15 +141,11 @@ Setting.prototype.set = async function (key, value) {
       }
       if (typeof value === 'object') {
         const objectPathList = this.getObjectPathListHelper(value, key)
-        console.log(objectPathList, value)
         await Promise.all(objectPathList.map(([keyElement, valueElement]) => this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, keyElement, this.options.serialize(valueElement))))
       } else {
         await this.db.run(`REPLACE INTO \`${this.options.tableName}\`(\`key\`,\`value\`) VALUES (?, ?)`, key, this.options.serialize(value))
       }
     }
-  } catch (e) {
-    console.error(e)
-    throw e
   } finally {
     if (this.options.cache) {
       this.awaitLock.release()
