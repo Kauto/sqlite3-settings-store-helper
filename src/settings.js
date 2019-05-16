@@ -26,11 +26,15 @@ function Setting (options) {
     cache: true,
     serialize: JSON.stringify,
     unserialize: JSON.parse,
-    seperator: '.',
-    defaults: {}
+    seperator: '.'
   }, options)
   this.awaitLock = new AwaitLock()
   this.checkedForTable = false
+  if (this.options.default) {
+    this.options.default = JSON.parse(JSON.stringify(this.options.default))
+  } else {
+    this.options.default = {}
+  }
   this.db = options.db
   if (!this.db) {
     try {
@@ -76,7 +80,7 @@ Setting.prototype.getSettings = async function (force = false) {
     this.settings = (await this.db.query(`SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\``)).reduce((loadedObject, v) => {
       objectPathSet(loadedObject, v.key, this.options.unserialize(v.value), this.options.seperator)
       return loadedObject
-    }, this.options.defaults)
+    }, this.options.default)
   } catch (e) {
     console.error(e)
     throw e
@@ -92,13 +96,14 @@ Setting.prototype.get = async function (key, defaultValue = undefined) {
   }
   await this.initTable()
   let value = await this.db.queryFirstCell(`SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\`=?`, key)
-  if (value === undefined) {
-    value = await this.db.queryKeyAndColumn('key', 'value', `SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\` WHERE \`key\` like ?`, generateLikeTermForObjectSearch(key, this.options.seperator))
-    if (!Object.keys(value).length) {
-      return defaultValue
-    }
+  if (value !== undefined) {
+    return this.options.unserialize(value)
   }
-  return this.options.unserialize(value)
+  const obj = (await this.db.query(`SELECT \`key\`, \`value\` FROM \`${this.options.tableName}\` WHERE \`key\` like ?`, generateLikeTermForObjectSearch(key, this.options.seperator))).reduce((loadedObject, v) => {
+    objectPathSet(loadedObject, v.key, this.options.unserialize(v.value), this.options.seperator)
+    return loadedObject
+  }, this.options.default)
+  return objectPathGet(obj, key, defaultValue, this.options.seperator)
 }
 
 Setting.prototype.set = async function (key, value) {

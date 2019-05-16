@@ -23,29 +23,20 @@ module.exports = function (options, DB, DBOptions) {
       } catch (e) {}
     })
 
-    it('should set a string and get a string', async function () {
-      await settings.set('testvalue', 'test447')
+    it('should set a object and get a object', async function () {
+      await settings.set('testvalue', { r: 'fe' })
       // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('testvalue')).to.have.string('test447')
+      expect(await settings.get('testvalue')).to.deep.equal({ r: 'fe' })
     })
 
-    it('should set a number and get a number', async function () {
-      await settings.set('testvalue', 31)
+    it('should deep load a value from default object', async function () {
       // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('testvalue')).to.equal(31)
+      expect(await settings.get('a.b')).to.deep.equal('c')
     })
 
-    it('should set a bool and get a bool', async function () {
-      await settings.set('testvalue', true)
+    it('should load object from default value', async function () {
       // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('testvalue')).to.equal(true)
-    })
-
-    it('should get undefined/default value if unknown', async function () {
-      // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('testvalue')).to.be.undefined
-      // eslint-disable-next-line no-unused-expressions
-      expect(await settings.get('testvalue', 'test124')).to.have.string('test124')
+      expect(await settings.get('a')).to.deep.equal({ b: 'c' })
     })
   }
 }
