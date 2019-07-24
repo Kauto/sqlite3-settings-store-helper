@@ -5,4 +5,4 @@ A nodejs library working with [better-sqlite3-helper](https://www.npmjs.com/pack
 
 ## License
 
-[MIT](https://github.com/JoshuaWise/better-sqlite3/blob/master/LICENSE)
+[MIT](https://github.com/Kauto/sqlite3-settings-store-helper/blob/master/LICENSE)
