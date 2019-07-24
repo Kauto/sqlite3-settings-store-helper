@@ -1,6 +1,6 @@
 {
   "name": "sqlite3-settings-store-helper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A system for sqlite3-helper or better-sqlite3-helper to save simple settings in a key-value-table.",
   "main": "src/settings.js",
   "scripts": {
