@@ -8,6 +8,7 @@
   },
   "author": "Markus Madeja",
   "repository": "Kauto/sqlite3-settings-store-helper",
+  "homepage": "http://intergenies.com/programs/nodejs/sqlite3-settings-store-helper",
   "license": "MIT",
   "keywords": [
     "key-value",
@@ -26,16 +27,16 @@
     "better-sqlite3"
   ],
   "devDependencies": {
-    "better-sqlite3-helper": "^2.0.3",
+    "better-sqlite3-helper": "^2.1.0",
     "chai": "^4.2.0",
-    "eslint": "^6.1.0",
-    "eslint-config-standard": "^13.0.1",
+    "eslint": "^6.2.0",
+    "eslint-config-standard": "^14.0.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-node": "^9.1.0",
     "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.0",
+    "eslint-plugin-standard": "^4.0.1",
     "mocha": "^6.2.0",
-    "sqlite3-helper": "^1.1.1"
+    "sqlite3-helper": "^1.2.1"
   },
   "peerDependencies": {
     "sqlite3-helper": "^1.1.0"
