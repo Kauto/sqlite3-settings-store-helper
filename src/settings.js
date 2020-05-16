@@ -1,4 +1,4 @@
-const AwaitLock = require('await-lock')
+const AwaitLock = require('await-lock').default
 const objectPathGet = require('object-path-get')
 const objectPathSet = require('object-path-set')
 
@@ -70,8 +70,8 @@ Setting.prototype.getObjectPathListHelper = function (obj, keyPrefix = '') {
   const length = keys.length
   let list = []
   for (let i = 0; i < length; i++) {
-    let value = obj[keys[i]]
-    let key = keyPrefix ? `${keyPrefix}${this.options.seperator}${keys[i]}` : keys[i]
+    const value = obj[keys[i]]
+    const key = keyPrefix ? `${keyPrefix}${this.options.seperator}${keys[i]}` : keys[i]
     if (typeof value === 'object') {
       list = list.concat(this.getObjectPathListHelper(value, key))
     } else {
@@ -109,7 +109,7 @@ Setting.prototype.get = async function (key, defaultValue = undefined) {
     return objectPathGet((await this.getSettings()), key, defaultValue, this.options.seperator)
   }
   await this.initTable()
-  let value = await this.db.queryFirstCell(`SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\`=?`, key)
+  const value = await this.db.queryFirstCell(`SELECT \`value\` FROM \`${this.options.tableName}\` WHERE \`key\`=?`, key)
   if (value !== undefined) {
     return this.options.unserialize(value)
   }
